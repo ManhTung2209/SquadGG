@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ImageViewer from "../components/ImageViewer";
 import { Home, Compass, Users, Bookmark, Plus, MessageSquare } from "lucide-react";
 import { FaEye } from "react-icons/fa";
 import { useAuthStore } from "../features/auth/store/useAuthStore";
@@ -17,7 +18,7 @@ const SideMenu = ({ onCreatePost }) => {
   ];
 
   return (
-    <div className="w-64 bg-base-200 p-5 border-r border-base-300 flex flex-col">
+    <div className="w-96 h-[calc(100vh-4rem)] bg-base-180 p-5 border-r-2 border-base-300 flex flex-col">
       <div className="space-y-6">
         <div className="flex items-center gap-3 p-2">
           <div className="avatar">
@@ -74,8 +75,8 @@ const TopStream = () => {
   ];
 
   return (
-    <div className="w-96 bg-base-200 p-5 border-l border-base-300">
-      <h2 className="text-xl font-bold mb-6">Top Live Streams</h2>
+    <div className="w-96  ">
+      <div className="p-2 "><h2 className="text-xl font-bold mb-6">Top Live Streams</h2></div>
       <div className="space-y-4">
         {streamers.map((streamer) => (
           <div key={streamer.handle} className="bg-base-300 p-4 rounded-lg hover:bg-base-300/80 transition-colors">
@@ -97,6 +98,9 @@ const TopStream = () => {
 
 const HomeFeed = () => {
   const { posts, loading, error, fetchPosts, hasMore } = usePostStore();
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [viewerImages, setViewerImages] = useState([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   useEffect(() => {
     fetchPosts();
@@ -117,6 +121,23 @@ const HomeFeed = () => {
     if (hasMore && !loading) {
       fetchPosts();
     }
+  };
+
+  const openViewer = (images, index = 0) => {
+    if (!images || images.length === 0) return;
+    setViewerImages(images);
+    setViewerIndex(index);
+    setIsViewerOpen(true);
+  };
+
+  const closeViewer = () => setIsViewerOpen(false);
+  const prevImage = (e) => {
+    e?.stopPropagation();
+    setViewerIndex((prev) => (prev - 1 + viewerImages.length) % viewerImages.length);
+  };
+  const nextImage = (e) => {
+    e?.stopPropagation();
+    setViewerIndex((prev) => (prev + 1) % viewerImages.length);
   };
 
   if (loading && posts.length === 0) {
@@ -144,15 +165,15 @@ const HomeFeed = () => {
   }
 
   return (
-    <div className="flex-1 p-10 bg-base-100">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="flex-1 bg-base-100 py-6">
+      <div className="mx-auto space-y-6 max-w-[600px] px-4">
         {posts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-base-content/60 text-lg">No posts yet. Be the first to create one!</p>
           </div>
         ) : (
           posts.map(post => (
-            <div key={post._id} className="bg-base-200 rounded-xl p-6">
+            <div key={post._id} className="bg-base-200 rounded-xl p-6 border border-base-300">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <div className="avatar">
@@ -210,29 +231,35 @@ const HomeFeed = () => {
                 </div>
               )}
               
-              {/* Media Images */}
+              {/* Media Images (match ProfilePage layout) */}
               {post.images && post.images.length > 0 && (
                 <div className="mb-4">
-                  <div className="w-full max-w-md mx-auto bg-gray-100 rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                  <div className="w-full rounded-lg overflow-hidden">
                     <div className="w-full h-full grid gap-1">
                       {post.images.length === 1 && (
-                        <img
-                          src={post.images[0]}
-                          alt="Post content"
-                          className="w-full h-full object-cover"
-                        />
+                        <div className="w-full flex items-center justify-center bg-base-300">
+                          <img
+                            src={post.images[0]}
+                            alt="Post content"
+                            className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                            onClick={() => openViewer(post.images, 0)}
+                          />
+                        </div>
                       )}
                       {post.images.length === 2 && (
                         <>
-                          <img
-                            src={post.images[0]}
-                            alt="Post content 1"
-                            className="w-full h-full object-cover"
-                          />
+                          <div className="w-full flex items-center justify-center bg-base-300">
+                            <img
+                              src={post.images[0]}
+                              alt="Post content 1"
+                              className="max-h-[80vh] w-full object-contain"
+                            />
+                          </div>
                           <img
                             src={post.images[1]}
                             alt="Post content 2"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover cursor-zoom-in"
+                            onClick={() => openViewer(post.images, 1)}
                           />
                         </>
                       )}
@@ -244,16 +271,22 @@ const HomeFeed = () => {
                             className="w-full h-full object-cover"
                           />
                           <div className="grid grid-cols-2 gap-1">
-                            <img
-                              src={post.images[1]}
-                              alt="Post content 2"
-                              className="w-full h-full object-cover"
-                            />
-                            <img
-                              src={post.images[2]}
-                              alt="Post content 3"
-                              className="w-full h-full object-cover"
-                            />
+                            <div className="w-full flex items-center justify-center bg-base-300">
+                              <img
+                                src={post.images[1]}
+                                alt="Post content 2"
+                                className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                                onClick={() => openViewer(post.images, 1)}
+                              />
+                            </div>
+                            <div className="w-full flex items-center justify-center bg-base-300">
+                              <img
+                                src={post.images[2]}
+                                alt="Post content 3"
+                                className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                                onClick={() => openViewer(post.images, 2)}
+                              />
+                            </div>
                           </div>
                         </>
                       )}
@@ -263,26 +296,36 @@ const HomeFeed = () => {
                             <img
                               src={post.images[0]}
                               alt="Post content 1"
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover cursor-zoom-in"
+                              onClick={() => openViewer(post.images, 0)}
                             />
-                            <img
-                              src={post.images[1]}
-                              alt="Post content 2"
-                              className="w-full h-full object-cover"
-                            />
+                            <div className="w-full flex items-center justify-center bg-base-300">
+                              <img
+                                src={post.images[1]}
+                                alt="Post content 2"
+                                className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                                onClick={() => openViewer(post.images, 1)}
+                              />
+                            </div>
                           </div>
                           <div className="grid grid-cols-2 gap-1">
-                            <img
-                              src={post.images[2]}
-                              alt="Post content 3"
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="relative">
+                            <div className="w-full flex items-center justify-center bg-base-300">
                               <img
-                                src={post.images[3]}
-                                alt="Post content 4"
-                                className="w-full h-full object-cover"
+                                src={post.images[2]}
+                                alt="Post content 3"
+                                className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                                onClick={() => openViewer(post.images, 2)}
                               />
+                            </div>
+                            <div className="relative">
+                              <div className="w-full h-full flex items-center justify-center bg-base-300">
+                                <img
+                                  src={post.images[3]}
+                                  alt="Post content 4"
+                                  className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                                  onClick={() => openViewer(post.images, 3)}
+                                />
+                              </div>
                               {post.images.length > 4 && (
                                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                                   <span className="text-white text-2xl font-bold">
@@ -299,13 +342,16 @@ const HomeFeed = () => {
                 </div>
               )}
 
-              {/* Single Image (legacy support) */}
+              {/* Single Image (legacy support) - show full image */}
               {post.image && !post.images && (
-                <img 
-                  src={post.image}
-                  alt="Post content" 
-                  className="w-full h-64 object-cover rounded-lg mb-4"
-                />
+                <div className="w-full rounded-lg mb-4 bg-base-300 flex items-center justify-center">
+                  <img 
+                    src={post.image}
+                    alt="Post content" 
+                    className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                    onClick={() => openViewer([post.image], 0)}
+                  />
+                </div>
               )}
 
               <div className="flex gap-4 mt-4">
@@ -337,6 +383,15 @@ const HomeFeed = () => {
           </div>
         )}
       </div>
+
+      <ImageViewer
+        isOpen={isViewerOpen}
+        images={viewerImages}
+        index={viewerIndex}
+        onClose={closeViewer}
+        onPrev={prevImage}
+        onNext={nextImage}
+      />
     </div>
   );
 };
@@ -354,15 +409,36 @@ const HomePage = () => {
 
   return (
     <>
-      <div className="flex min-h-[calc(100vh-4rem)] mt-16">
-        <SideMenu onCreatePost={handleCreatePost} />
-        <HomeFeed />
-        <TopStream />
+      <div className="mt-16 h-[calc(100vh-4rem)] relative">
+        <div className="hidden lg:block fixed top-16 left-0 h-[calc(100vh-4rem)]">
+          <SideMenu onCreatePost={handleCreatePost} />
+        </div>
+
+        <div className="bg-base-180 p-5 pr-4 border-l-2 border-base-300 lg:block fixed top-16 right-0 h-[calc(100vh-4rem)]">
+          <div className="w-108 h-full group">
+            <div className="h-full w-full">
+              <TopStream />
+            </div>
+          </div>
+        </div>
+
+        <div className="h-full overflow-y-auto px-4 lg:pl-[24rem] lg:pr-[24rem]">
+          <HomeFeed />
+        </div>
       </div>
       <CreatePostModal 
         isOpen={isCreatePostModalOpen} 
         onClose={handleCloseCreatePost} 
       />
+      {/* Local styles to control right panel scrollbar visibility */}
+      <style>{`
+        .thin-scroll{scrollbar-width:none;}
+        .group:hover .thin-scroll{scrollbar-width:thin;}
+        .thin-scroll::-webkit-scrollbar{width:0px;height:0px;}
+        .group:hover .thin-scroll::-webkit-scrollbar{width:6px;height:6px;}
+        .thin-scroll::-webkit-scrollbar-track{background:transparent;}
+        .thin-scroll::-webkit-scrollbar-thumb{background-color:rgba(0,0,0,0.25);border-radius:9999px;}
+      `}</style>
     </>
   );
 };

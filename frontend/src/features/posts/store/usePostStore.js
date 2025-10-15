@@ -14,8 +14,8 @@ const usePostStore = create((set, get) => ({
     try {
       const { lastPostId } = get();
       const url = lastPostId 
-        ? `/api/posts?limit=${limit}&lastPostId=${lastPostId}`
-        : `/api/posts?limit=${limit}`;
+        ? `/posts?limit=${limit}&lastPostId=${lastPostId}`
+        : `/posts?limit=${limit}`;
 
       const response = await axios.get(url);
       const { posts, hasMore, lastPostId: newLastPostId } = response.data.data;
@@ -38,7 +38,7 @@ const usePostStore = create((set, get) => ({
   createPost: async (postData) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.post('/api/posts', postData);
+      const response = await axios.post('/posts', postData);
       const newPost = response.data.data;
 
       set({
@@ -53,6 +53,32 @@ const usePostStore = create((set, get) => ({
         loading: false
       });
       return { success: false, error: error.response?.data?.message || "Failed to create post" };
+    }
+  },
+
+  // Fetch posts of a specific user (Profile page)
+  fetchUserPosts: async (userId, limit = 10) => {
+    set({ loading: true, error: null });
+    try {
+      const { lastPostId } = get();
+      const url = lastPostId 
+        ? `/posts/user/${userId}?limit=${limit}&lastPostId=${lastPostId}`
+        : `/posts/user/${userId}?limit=${limit}`;
+
+      const response = await axios.get(url);
+      const { posts, hasMore, lastPostId: newLastPostId } = response.data.data;
+
+      set({
+        posts: [...get().posts, ...posts],
+        hasMore,
+        lastPostId: newLastPostId,
+        loading: false
+      });
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || "Failed to fetch user posts",
+        loading: false
+      });
     }
   },
 

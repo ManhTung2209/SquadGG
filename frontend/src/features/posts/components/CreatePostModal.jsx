@@ -103,7 +103,9 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
     
     if (!content.trim()) {
       alert("Please enter some content for your post");
@@ -122,12 +124,8 @@ const CreatePostModal = ({ isOpen, onClose }) => {
     const result = await createPost(postData);
     
     if (result.success) {
-      // Reset form
-      setContent("");
-      setTags("");
-      setGame("");
-      setIsPublic(true);
-      onClose();
+      // Fully reset via handleClose to avoid stale images being reused
+      handleClose();
     }
   };
 
@@ -297,48 +295,60 @@ const CreatePostModal = ({ isOpen, onClose }) => {
               {/* Image Grid - Fixed aspect ratio container */}
               {imagePreviews.length > 0 && (
                 <div className="mb-4">
-                  <div className="w-full max-w-md mx-auto bg-gray-100 rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                  <div className="w-full max-w-md mx-auto bg-gray-100 rounded-lg overflow-hidden">
                     {/* Multiple Images Layout */}
                     <div className="w-full h-full grid gap-1">
                       {imagePreviews.length === 1 && (
-                        <img
-                          src={imagePreviews[0]}
-                          alt="Preview"
-                          className="w-full h-full object-cover"
-                        />
+                        <div className="w-full flex items-center justify-center bg-base-300">
+                          <img
+                            src={imagePreviews[0]}
+                            alt="Preview"
+                            className="max-h-[80vh] w-full object-contain"
+                          />
+                        </div>
                       )}
                       {imagePreviews.length === 2 && (
                         <>
-                          <img
-                            src={imagePreviews[0]}
-                            alt="Preview 1"
-                            className="w-full h-full object-cover"
-                          />
-                          <img
-                            src={imagePreviews[1]}
-                            alt="Preview 2"
-                            className="w-full h-full object-cover"
-                          />
+                          <div className="w-full flex items-center justify-center bg-base-300">
+                            <img
+                              src={imagePreviews[0]}
+                              alt="Preview 1"
+                              className="max-h-[80vh] w-full object-contain"
+                            />
+                          </div>
+                          <div className="w-full flex items-center justify-center bg-base-300">
+                            <img
+                              src={imagePreviews[1]}
+                              alt="Preview 2"
+                              className="max-h-[80vh] w-full object-contain"
+                            />
+                          </div>
                         </>
                       )}
                       {imagePreviews.length === 3 && (
                         <>
-                          <img
-                            src={imagePreviews[0]}
-                            alt="Preview 1"
-                            className="w-full h-full object-cover"
-                          />
+                          <div className="w-full flex items-center justify-center bg-base-300">
+                            <img
+                              src={imagePreviews[0]}
+                              alt="Preview 1"
+                              className="max-h-[80vh] w-full object-contain"
+                            />
+                          </div>
                           <div className="grid grid-cols-2 gap-1">
-                            <img
-                              src={imagePreviews[1]}
-                              alt="Preview 2"
-                              className="w-full h-full object-cover"
-                            />
-                            <img
-                              src={imagePreviews[2]}
-                              alt="Preview 3"
-                              className="w-full h-full object-cover"
-                            />
+                            <div className="w-full flex items-center justify-center bg-base-300">
+                              <img
+                                src={imagePreviews[1]}
+                                alt="Preview 2"
+                                className="max-h-[80vh] w-full object-contain"
+                              />
+                            </div>
+                            <div className="w-full flex items-center justify-center bg-base-300">
+                              <img
+                                src={imagePreviews[2]}
+                                alt="Preview 3"
+                                className="max-h-[80vh] w-full object-contain"
+                              />
+                            </div>
                           </div>
                         </>
                       )}
@@ -357,17 +367,21 @@ const CreatePostModal = ({ isOpen, onClose }) => {
                             />
                           </div>
                           <div className="grid grid-cols-2 gap-1">
-                            <img
-                              src={imagePreviews[2]}
-                              alt="Preview 3"
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="relative">
+                            <div className="w-full flex items-center justify-center bg-base-300">
                               <img
-                                src={imagePreviews[3]}
-                                alt="Preview 4"
-                                className="w-full h-full object-cover"
+                                src={imagePreviews[2]}
+                                alt="Preview 3"
+                                className="max-h-[80vh] w-full object-contain"
                               />
+                            </div>
+                            <div className="relative">
+                              <div className="w-full h-full flex items-center justify-center bg-base-300">
+                                <img
+                                  src={imagePreviews[3]}
+                                  alt="Preview 4"
+                                  className="max-h-[80vh] w-full object-contain"
+                                />
+                              </div>
                               {imagePreviews.length > 4 && (
                                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                                   <span className="text-white text-2xl font-bold">
@@ -453,6 +467,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
             <button
               type="submit"
               className="btn btn-primary"
+              onClick={handleSubmit}
               disabled={loading || !content.trim()}
             >
               {loading ? (

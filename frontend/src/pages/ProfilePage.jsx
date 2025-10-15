@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ImageViewer from "../components/ImageViewer";
 import { useAuthStore } from "../features/auth/store/useAuthStore";
 import usePostStore from "../features/posts/store/usePostStore";
 import { Camera, Mail, User, Grid, List } from "lucide-react";
@@ -8,6 +9,9 @@ const ProfilePage = () => {
   const { posts, loading, error, fetchUserPosts } = usePostStore();
   const [selectedImg, setSelectedImg] = useState(null);
   const [viewMode, setViewMode] = useState("grid"); // "grid" or "list"
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [viewerImages, setViewerImages] = useState([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   useEffect(() => {
     if (authUser?._id) {
@@ -39,6 +43,23 @@ const ProfilePage = () => {
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  };
+
+  const openViewer = (images, index = 0) => {
+    if (!images || images.length === 0) return;
+    setViewerImages(images);
+    setViewerIndex(index);
+    setIsViewerOpen(true);
+  };
+
+  const closeViewer = () => setIsViewerOpen(false);
+  const prevImage = (e) => {
+    e?.stopPropagation();
+    setViewerIndex((prev) => (prev - 1 + viewerImages.length) % viewerImages.length);
+  };
+  const nextImage = (e) => {
+    e?.stopPropagation();
+    setViewerIndex((prev) => (prev + 1) % viewerImages.length);
   };
 
   return (
@@ -198,26 +219,31 @@ const ProfilePage = () => {
                   {/* Media Images */}
                   {post.images && post.images.length > 0 && (
                     <div className="mb-3">
-                      <div className="w-full bg-gray-100 rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                      <div className="w-full bg-gray-100 rounded-lg overflow-hidden">
                         <div className="w-full h-full grid gap-1">
                           {post.images.length === 1 && (
                             <img
                               src={post.images[0]}
                               alt="Post content"
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover cursor-zoom-in"
+                              onClick={() => openViewer(post.images, 0)}
                             />
                           )}
                           {post.images.length === 2 && (
                             <>
-                              <img
-                                src={post.images[0]}
-                                alt="Post content 1"
-                                className="w-full h-full object-cover"
-                              />
+                              <div className="w-full flex items-center justify-center bg-base-300">
+                                <img
+                                  src={post.images[0]}
+                                  alt="Post content 1"
+                                  className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                                  onClick={() => openViewer(post.images, 0)}
+                                />
+                              </div>
                               <img
                                 src={post.images[1]}
                                 alt="Post content 2"
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover cursor-zoom-in"
+                                onClick={() => openViewer(post.images, 1)}
                               />
                             </>
                           )}
@@ -227,27 +253,37 @@ const ProfilePage = () => {
                                 <img
                                   src={post.images[0]}
                                   alt="Post content 1"
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover cursor-zoom-in"
+                                  onClick={() => openViewer(post.images, 0)}
                                 />
-                                <img
-                                  src={post.images[1]}
-                                  alt="Post content 2"
-                                  className="w-full h-full object-cover"
-                                />
+                                <div className="w-full flex items-center justify-center bg-base-300">
+                                  <img
+                                    src={post.images[1]}
+                                    alt="Post content 2"
+                                    className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                                    onClick={() => openViewer(post.images, 1)}
+                                  />
+                                </div>
                               </div>
                               <div className="grid grid-cols-2 gap-1">
-                                <img
-                                  src={post.images[2]}
-                                  alt="Post content 3"
-                                  className="w-full h-full object-cover"
-                                />
+                                <div className="w-full flex items-center justify-center bg-base-300">
+                                  <img
+                                    src={post.images[2]}
+                                    alt="Post content 3"
+                                    className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                                    onClick={() => openViewer(post.images, 2)}
+                                  />
+                                </div>
                                 {post.images.length > 3 && (
                                   <div className="relative">
-                                    <img
-                                      src={post.images[3]}
-                                      alt="Post content 4"
-                                      className="w-full h-full object-cover"
-                                    />
+                                    <div className="w-full h-full flex items-center justify-center bg-base-300">
+                                      <img
+                                        src={post.images[3]}
+                                        alt="Post content 4"
+                                        className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                                        onClick={() => openViewer(post.images, 3)}
+                                      />
+                                    </div>
                                     {post.images.length > 4 && (
                                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                                         <span className="text-white text-lg font-bold">
@@ -267,11 +303,14 @@ const ProfilePage = () => {
 
                   {/* Single Image (legacy support) */}
                   {post.image && !post.images && (
-                    <img 
-                      src={post.image}
-                      alt="Post content" 
-                      className="w-full h-32 object-cover rounded-lg mb-3"
-                    />
+                    <div className="w-full rounded-lg mb-3 bg-base-300 flex items-center justify-center">
+                      <img 
+                        src={post.image}
+                        alt="Post content" 
+                        className="max-h-[80vh] w-full object-contain cursor-zoom-in"
+                        onClick={() => openViewer([post.image], 0)}
+                      />
+                    </div>
                   )}
 
                   <div className="flex gap-2">
@@ -285,6 +324,15 @@ const ProfilePage = () => {
           )}
         </div>
       </div>
+
+      <ImageViewer
+        isOpen={isViewerOpen}
+        images={viewerImages}
+        index={viewerIndex}
+        onClose={closeViewer}
+        onPrev={prevImage}
+        onNext={nextImage}
+      />
     </div>
   );
 };
